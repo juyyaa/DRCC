@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Situation Map — DRCC</title>
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/forms.css">
+  <link rel="stylesheet" href="../assets/css/map.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div>
+      <div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button">
+        <i class="fas fa-angles-left" id="sidebar-toggle-icon"></i>
+        <span>Sembunyikan Panel</span>
+      </button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button">
+        <i class="fas fa-right-from-bracket"></i><span>Keluar</span>
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <!-- ===== MAIN AREA ===== -->
+  <div class="main-area">
+
+    <!-- NAVBAR -->
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title">
+          <h4 id="page-title">Situation Map</h4>
+          <span id="page-subtitle">Peta bencana</span>
+        </div>
+      </div>
+      <div class="navbar-center">
+        <div class="sys-status"><div class="sys-dot"></div><span>SISTEM AKTIF</span></div>
+      </div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge">3</span></button>
+        <button class="navbar-btn" type="button"><i class="fas fa-circle-question"></i></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user">
+          <div class="user-avatar" id="user-avatar">AD</div>
+          <div class="user-info">
+            <span class="user-name" id="user-name">Administrator</span>
+            <span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="page-content map-page" id="page-content">
+
+      <!-- ── TOP BAR: stats + actions ── -->
+      <div class="map-top-bar">
+        <div class="map-top-left">
+          <div class="map-title-block">
+            <h2>Situation Map</h2>
+            <p>Peta bencana interaktif · Indonesia</p>
+          </div>
+          <div class="map-stats">
+            <div class="map-stat-pill stat-total">
+              <i class="fas fa-map-pin"></i>
+              <span id="stat-total">13</span> Insiden
+            </div>
+            <div class="map-stat-pill stat-bahaya">
+              <i class="fas fa-circle" style="font-size:7px"></i>
+              <span id="stat-bahaya">0</span> Bahaya
+            </div>
+            <div class="map-stat-pill stat-waspada">
+              <i class="fas fa-circle" style="font-size:7px"></i>
+              <span id="stat-waspada">0</span> Waspada
+            </div>
+            <div class="map-stat-pill stat-normal">
+              <i class="fas fa-circle" style="font-size:7px"></i>
+              <span id="stat-normal">0</span> Normal
+            </div>
+          </div>
+        </div>
+        <div class="map-top-right">
+          <button class="btn btn-primary btn-sm btn-add-map" id="btn-add-marker"
+                  onclick="toggleAddMode()" type="button">
+            <i class="fas fa-map-marker-alt"></i> Tambah Marker
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="mapInstance.setView([-2.5,118],5)" type="button" title="Reset tampilan">
+            <i class="fas fa-expand"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── MAP BODY ── -->
+      <div class="map-body">
+
+        <!-- Leaflet Map -->
+        <div style="position:relative;flex:1;min-height:0">
+          <div id="map"></div>
+
+          <!-- Floating Layer Panel -->
+          <div class="map-layer-panel">
+            <div class="map-layer-title"><i class="fas fa-layer-group"></i> Layer</div>
+
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('heatmap',this.checked)">
+              <span class="map-layer-dot" style="background:rgba(231,76,60,0.5)"></span> Heatmap
+            </label>
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('gempa',this.checked)">
+              <span class="map-layer-dot" style="background:#E74C3C"></span> Gempa
+            </label>
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('banjir',this.checked)">
+              <span class="map-layer-dot" style="background:#2980B9"></span> Banjir
+            </label>
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('longsor',this.checked)">
+              <span class="map-layer-dot" style="background:#D35400"></span> Longsor
+            </label>
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('kebakaran',this.checked)">
+              <span class="map-layer-dot" style="background:#922B21"></span> Kebakaran
+            </label>
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('posko',this.checked)">
+              <span class="map-layer-dot" style="background:#27AE60"></span> Posko
+            </label>
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('sumberdaya',this.checked)">
+              <span class="map-layer-dot" style="background:#8E6030"></span> Sumber Daya
+            </label>
+            <label class="map-layer-toggle">
+              <input type="checkbox" checked onchange="toggleLayer('custom',this.checked)">
+              <span class="map-layer-dot" style="background:#6C757D"></span> Custom
+            </label>
+          </div>
+
+          <!-- Legend -->
+          <div class="map-legend">
+            <div class="legend-title"><i class="fas fa-circle-info"></i> Legenda</div>
+
+            <div class="legend-section">
+              <div class="legend-subtitle">Jenis Bencana</div>
+              <div class="legend-row"><span class="legend-circle" style="background:#E74C3C"></span>Gempa Bumi</div>
+              <div class="legend-row"><span class="legend-circle" style="background:#2980B9"></span>Banjir</div>
+              <div class="legend-row"><span class="legend-circle" style="background:#D35400"></span>Tanah Longsor</div>
+              <div class="legend-row"><span class="legend-circle" style="background:#922B21"></span>Kebakaran</div>
+            </div>
+            <div class="legend-section">
+              <div class="legend-subtitle">Fasilitas</div>
+              <div class="legend-row"><span class="legend-circle" style="background:#27AE60"></span>Posko Pengungsian</div>
+              <div class="legend-row"><span class="legend-circle" style="background:#8E6030"></span>Sumber Daya</div>
+            </div>
+            <div class="legend-section">
+              <div class="legend-subtitle">Heatmap Prioritas</div>
+              <div class="legend-row"><span class="legend-heat-block" style="background:#E74C3C"></span>BAHAYA</div>
+              <div class="legend-row"><span class="legend-heat-block" style="background:#F39C12"></span>WASPADA</div>
+              <div class="legend-row"><span class="legend-heat-block" style="background:#2ECC71"></span>NORMAL</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SIDE PANEL: Incident List ── -->
+        <div class="map-side-panel">
+          <div class="side-panel-header">
+            <div class="side-panel-title">
+              <i class="fas fa-list-ul"></i>
+              Daftar Insiden
+              <span class="badge badge-danger" id="incident-count">20</span>
+            </div>
+            <!-- Filter tabs -->
+            <div class="filter-tabs" style="flex-wrap:wrap;gap:3px">
+              <div class="filter-tab list-filter-tab active" data-f="semua"     onclick="filterList('semua')">Semua</div>
+              <div class="filter-tab list-filter-tab"        data-f="gempa"     onclick="filterList('gempa')">Gempa</div>
+              <div class="filter-tab list-filter-tab"        data-f="banjir"    onclick="filterList('banjir')">Banjir</div>
+              <div class="filter-tab list-filter-tab"        data-f="longsor"   onclick="filterList('longsor')">Longsor</div>
+              <div class="filter-tab list-filter-tab"        data-f="kebakaran" onclick="filterList('kebakaran')">Karhutla</div>
+              <div class="filter-tab list-filter-tab"        data-f="BAHAYA"    onclick="filterList('BAHAYA')">🔴 Bahaya</div>
+            </div>
+          </div>
+          <div class="side-panel-body" id="incident-list">
+            <!-- Built by JS -->
+          </div>
+        </div>
+
+      </div><!-- /map-body -->
+    </main>
+  </div>
+</div>
+
+<!-- ===== ADD MARKER MODAL ===== -->
+<div class="crud-modal-overlay hidden" id="add-marker-modal"
+     onclick="if(event.target===this)hideAddMarkerModal()">
+  <div class="crud-modal-inner">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fas fa-map-marker-alt" style="color:var(--copper)"></i>
+        Tambah Marker Baru
+      </div>
+      <button class="modal-close" onclick="hideAddMarkerModal()" type="button">
+        <i class="fas fa-xmark"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="add-marker-form" onsubmit="event.preventDefault();submitAddMarker()">
+
+        <!-- Coordinates (read-only) -->
+        <div class="modal-form-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Latitude</label>
+            <input class="form-input" id="f-lat" type="text" readonly style="background:var(--bg);font-family:var(--font-mono);font-size:12px">
+          </div>
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Longitude</label>
+            <input class="form-input" id="f-lng" type="text" readonly style="background:var(--bg);font-family:var(--font-mono);font-size:12px">
+          </div>
+        </div>
+
+        <div class="form-field">
+          <label class="form-label">Nama Insiden / Lokasi <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" id="f-name" type="text" placeholder="cth: Banjir Desa Sukamaju" required>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Jenis Bencana</label>
+            <select class="form-select" id="f-type">
+              <option value="gempa">Gempa Bumi</option>
+              <option value="banjir" selected>Banjir</option>
+              <option value="longsor">Tanah Longsor</option>
+              <option value="kebakaran">Kebakaran</option>
+            </select>
+          </div>
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Tingkat Keparahan</label>
+            <select class="form-select" id="f-severity">
+              <option value="NORMAL">Normal</option>
+              <option value="WASPADA" selected>Waspada</option>
+              <option value="BAHAYA">Bahaya</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-field" style="margin-bottom:0">
+          <label class="form-label">Deskripsi</label>
+          <textarea class="form-textarea" id="f-desc" placeholder="Deskripsi singkat situasi..." rows="2"></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideAddMarkerModal()" type="button">Batal</button>
+      <button class="btn btn-primary" onclick="submitAddMarker()" type="button">
+        <i class="fas fa-map-marker-alt"></i> Tambahkan ke Peta
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/data/storage.js"></script>
+<script src="../assets/js/data/mock-data.js"></script>
+<script src="../assets/js/pages/map.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', initMap);
+</script>
+</body>
+</html>

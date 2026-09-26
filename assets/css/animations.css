@@ -1,0 +1,197 @@
+/* ============================================
+   DRCC — animations.css
+   Keyframes & Animation Utilities
+   ============================================ */
+
+/* ---- CORE KEYFRAMES ---- */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(28px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOutRight {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(44px); }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes shake {
+  0%,100% { transform: translateX(0); }
+  15%     { transform: translateX(-6px); }
+  30%     { transform: translateX(6px); }
+  45%     { transform: translateX(-4px); }
+  60%     { transform: translateX(4px); }
+  75%     { transform: translateX(-2px); }
+}
+
+@keyframes pulse {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%     { opacity: 0.6; transform: scale(1.15); }
+}
+
+@keyframes pulseBorder {
+  0%,100% { box-shadow: 0 0 0 0 rgba(231,76,60,0.45); }
+  50%     { box-shadow: 0 0 0 8px rgba(231,76,60,0); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0; }
+}
+
+@keyframes wave {
+  0%,100% { transform: scaleY(0.3); }
+  50%     { transform: scaleY(1); }
+}
+
+@keyframes ping {
+  75%,100% { transform: scale(1.8); opacity: 0; }
+}
+
+@keyframes bounceIn {
+  0%   { opacity: 0; transform: scale(0.7); }
+  60%  { opacity: 1; transform: scale(1.06); }
+  80%  { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
+
+@keyframes alertPop {
+  from { opacity: 0; transform: translateX(-12px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+}
+
+@keyframes counterUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- UTILITY CLASSES ---- */
+.anim-fade-in    { animation: fadeIn 0.3s ease forwards; }
+.anim-fade-in-up { animation: fadeInUp 0.4s ease forwards; }
+.anim-slide-in   { animation: slideInUp 0.35s ease forwards; }
+.anim-slide-left { animation: slideInLeft 0.3s ease forwards; }
+.anim-bounce-in  { animation: bounceIn 0.4s ease forwards; }
+.anim-shake      { animation: shake 0.4s ease; }
+.anim-spin       { animation: spin 0.9s linear infinite; }
+.anim-pulse      { animation: pulse 2s ease infinite; }
+.anim-ping       { animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite; }
+.anim-blink      { animation: blink 1s step-end infinite; }
+
+/* ---- WAVEFORM BARS (Signal Monitor) ---- */
+.waveform {
+  display: flex; align-items: center; gap: 2px; height: 22px;
+}
+.wave-bar {
+  width: 3px; border-radius: 2px; background: var(--copper);
+  animation: wave 1s ease-in-out infinite;
+}
+.wave-bar:nth-child(1) { animation-delay: 0.00s; height: 30%; }
+.wave-bar:nth-child(2) { animation-delay: 0.12s; height: 60%; }
+.wave-bar:nth-child(3) { animation-delay: 0.24s; height: 100%; }
+.wave-bar:nth-child(4) { animation-delay: 0.36s; height: 75%; }
+.wave-bar:nth-child(5) { animation-delay: 0.48s; height: 45%; }
+.wave-bar:nth-child(6) { animation-delay: 0.60s; height: 65%; }
+.wave-bar:nth-child(7) { animation-delay: 0.72s; height: 50%; }
+
+.wave-bar.wave-success { background: var(--success); }
+.wave-bar.wave-danger  { background: var(--danger); }
+.wave-bar.wave-warning { background: var(--warning); }
+.wave-bar.wave-info    { background: var(--info); }
+.wave-bar.wave-gold    { background: var(--gold-dark); }
+
+.waveform.inactive .wave-bar { animation: none; height: 25%; opacity: 0.3; }
+
+/* ---- STATUS DOT ---- */
+.status-dot {
+  position: relative; width: 10px; height: 10px;
+  display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.status-dot::before { content: ''; position: absolute; inset: 0; border-radius: 50%; background: currentColor; }
+.status-dot.live::after {
+  content: ''; position: absolute; inset: -3px;
+  border-radius: 50%; background: currentColor; opacity: 0.4;
+  animation: ping 1.5s cubic-bezier(0,0,0.2,1) infinite;
+}
+
+/* ---- LOADING ---- */
+.loading-overlay {
+  position: absolute; inset: 0;
+  background: rgba(248,249,250,0.88);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 12px; z-index: 50; border-radius: inherit; backdrop-filter: blur(2px);
+}
+.loading-spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border); border-top-color: var(--copper);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+.loading-spinner-sm {
+  width: 18px; height: 18px;
+  border: 2px solid var(--border); border-top-color: var(--copper);
+  border-radius: 50%; animation: spin 0.7s linear infinite;
+}
+.loading-text { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+
+/* ---- PROGRESS BAR ---- */
+.progress-wrap { height: 6px; background: var(--bg); border-radius: var(--radius-full); overflow: hidden; }
+.progress-fill {
+  height: 100%; border-radius: var(--radius-full); background: var(--copper);
+  transition: width 0.6s ease; animation: progressFill 0.8s ease;
+}
+.progress-fill.success { background: var(--success); }
+.progress-fill.danger  { background: var(--danger); }
+.progress-fill.warning { background: var(--warning); }
+.progress-fill.info    { background: var(--info); }
+
+/* ---- REDUCED MOTION ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

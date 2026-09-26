@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Insiden — DRCC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/forms.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div><div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div></div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button"><i class="fas fa-angles-left" id="sidebar-toggle-icon"></i><span>Sembunyikan Panel</span></button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button"><i class="fas fa-right-from-bracket"></i><span>Keluar</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="main-area">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title"><h4 id="page-title">Insiden</h4><span id="page-subtitle">Manajemen insiden</span></div>
+      </div>
+      <div class="navbar-center"><div class="sys-status"><div class="sys-dot"></div><span>SISTEM AKTIF</span></div></div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge">3</span></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user"><div class="user-avatar" id="user-avatar">AD</div><div class="user-info"><span class="user-name" id="user-name">Admin</span><span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span></div></div>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left"><h2>Manajemen Insiden</h2><p>Daftar, input, dan pengelolaan insiden bencana di seluruh Indonesia</p></div>
+        <div class="page-header-right">
+          <button class="btn btn-primary" onclick="showAddModal()" type="button"><i class="fas fa-plus"></i> Tambah Insiden</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="crud-stats">
+        <div class="crud-stat-card total"><div class="crud-stat-num" id="st-total">0</div><div class="crud-stat-label">Total Insiden</div></div>
+        <div class="crud-stat-card aktif"><div class="crud-stat-num" id="st-aktif">0</div><div class="crud-stat-label">Aktif</div></div>
+        <div class="crud-stat-card medium"><div class="crud-stat-num" id="st-ditangani">0</div><div class="crud-stat-label">Ditangani</div></div>
+        <div class="crud-stat-card done"><div class="crud-stat-num" id="st-selesai">0</div><div class="crud-stat-label">Selesai</div></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="crud-toolbar">
+        <div class="crud-toolbar-left">
+          <div class="filter-tabs">
+            <div class="filter-tab inc-filter-tab active" data-f="semua"     onclick="incFilterChange('semua')">Semua</div>
+            <div class="filter-tab inc-filter-tab"        data-f="aktif"     onclick="incFilterChange('aktif')">🔴 Aktif</div>
+            <div class="filter-tab inc-filter-tab"        data-f="ditangani" onclick="incFilterChange('ditangani')">🟡 Ditangani</div>
+            <div class="filter-tab inc-filter-tab"        data-f="selesai"   onclick="incFilterChange('selesai')">🟢 Selesai</div>
+            <div class="filter-tab inc-filter-tab"        data-f="BAHAYA"    onclick="incFilterChange('BAHAYA')">⚠ Bahaya</div>
+          </div>
+        </div>
+        <div class="crud-toolbar-right">
+          <div class="search-bar" style="width:240px">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" placeholder="Cari insiden..." oninput="incSearchChange(this.value)">
+          </div>
+          <span style="font-size:12px;color:var(--text-muted)"><span id="inc-count">0</span> data</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="crud-table-wrap">
+        <table>
+          <thead><tr>
+            <th>ID</th><th>Judul &amp; Lokasi</th><th class="hide-mobile">Jenis</th>
+            <th>Severity</th><th>Status</th>
+            <th class="hide-mobile">Pelapor</th><th class="hide-mobile">Diperbarui</th><th>Aksi</th>
+          </tr></thead>
+          <tbody id="inc-tbody"></tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ADD / EDIT MODAL -->
+<div class="crud-modal-overlay hidden" id="inc-modal" onclick="if(event.target===this)hideIncModal()">
+  <div class="crud-modal-inner wide">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-triangle-exclamation" style="color:var(--copper)"></i> <span id="inc-modal-title">Tambah Insiden</span></div>
+      <button class="modal-close" onclick="hideIncModal()" type="button"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="inc-form" onsubmit="event.preventDefault();submitIncident()">
+        <div class="form-field"><label class="form-label">Judul Insiden <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" id="f-title" type="text" placeholder="cth: Banjir Bandang Kec. Cugenang" required></div>
+        <div class="form-grid-2">
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Jenis Bencana</label>
+            <select class="form-select" id="f-type">
+              <option value="gempa">Gempa Bumi</option><option value="banjir" selected>Banjir</option>
+              <option value="longsor">Tanah Longsor</option><option value="kebakaran">Kebakaran</option>
+              <option value="kekeringan">Kekeringan</option><option value="lainnya">Lainnya</option>
+            </select></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Tingkat Keparahan</label>
+            <select class="form-select" id="f-severity">
+              <option value="NORMAL">Normal</option><option value="WASPADA" selected>Waspada</option>
+              <option value="SIAGA">Siaga</option><option value="BAHAYA">Bahaya</option>
+            </select></div>
+        </div>
+        <div class="form-grid-2" style="margin-top:12px">
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Lokasi / Kecamatan</label>
+            <input class="form-input" id="f-location" type="text" placeholder="cth: Kec. Cugenang"></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Provinsi</label>
+            <select class="form-select" id="f-province"><option value="">— Pilih —</option></select></div>
+        </div>
+        <div class="form-grid-3" style="margin-top:12px">
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Latitude</label>
+            <input class="form-input" id="f-lat" type="number" step="any" placeholder="-6.82"></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Longitude</label>
+            <input class="form-input" id="f-lng" type="number" step="any" placeholder="107.14"></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Jumlah Terdampak</label>
+            <input class="form-input" id="f-affected" type="number" min="0" placeholder="0"></div>
+        </div>
+        <div class="form-field" style="margin-top:12px"><label class="form-label">Deskripsi Singkat</label>
+          <textarea class="form-textarea" id="f-desc" rows="2" placeholder="Gambaran situasi terkini..."></textarea></div>
+        <div class="form-grid-3" style="margin-top:0">
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Nama Pelapor</label>
+            <input class="form-input" id="f-reporter" type="text" placeholder="Nama pelapor"></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">No. HP</label>
+            <input class="form-input" id="f-phone" type="tel" placeholder="08xx"></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Status</label>
+            <select class="form-select" id="f-status">
+              <option value="aktif">Aktif</option><option value="ditangani">Ditangani</option><option value="selesai">Selesai</option>
+            </select></div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideIncModal()" type="button">Batal</button>
+      <button class="btn btn-primary" onclick="submitIncident()" type="button"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="crud-modal-overlay hidden" id="detail-modal" onclick="if(event.target===this)hideDetailModal()">
+  <div class="crud-modal-inner wide">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-eye" style="color:var(--copper)"></i> <span id="detail-inc-title">Detail Insiden</span></div>
+      <button class="modal-close" onclick="hideDetailModal()" type="button"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/data/storage.js"></script>
+<script src="../assets/js/data/mock-data.js"></script>
+<script src="../assets/js/pages/incidents.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initIncidents);</script>
+</body>
+</html>

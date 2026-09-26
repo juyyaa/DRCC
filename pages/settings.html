@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Pengaturan — DRCC</title>
+  <script>try{if(JSON.parse(localStorage.getItem('drcc_dark_mode')))document.documentElement.classList.add('dark-mode')}catch(e){}</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/forms.css">
+  <link rel="stylesheet" href="../assets/css/tables.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div><div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div></div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button"><i class="fas fa-angles-left" id="sidebar-toggle-icon"></i><span>Sembunyikan Panel</span></button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button"><i class="fas fa-right-from-bracket"></i><span>Keluar</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="main-area">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title"><h4 id="page-title">Pengaturan</h4><span id="page-subtitle">Konfigurasi sistem</span></div>
+      </div>
+      <div class="navbar-center"><div class="sys-status"><div class="sys-dot"></div><span>SISTEM AKTIF</span></div></div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge">3</span></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user"><div class="user-avatar" id="user-avatar">AD</div><div class="user-info"><span class="user-name" id="user-name">Admin</span><span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span></div></div>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-content">
+
+      <!-- Header -->
+      <div class="page-header">
+        <div class="page-header-left"><h2>Pengaturan</h2><p>Konfigurasi profil pengguna, tampilan, dan manajemen data sistem</p></div>
+        <div class="page-header-right">
+          <button class="btn btn-primary" onclick="saveSettings()" type="button"><i class="fas fa-save"></i> Simpan Pengaturan</button>
+        </div>
+      </div>
+
+      <!-- ── Dark Mode Feature Toggle (prominent) ── -->
+      <div class="dark-toggle-wrap" id="dark-toggle-wrap" onclick="toggleDarkMode()">
+        <div class="dark-toggle-left">
+          <div class="dark-toggle-icon"><i class="fas fa-sun" id="dark-mode-icon"></i></div>
+          <div class="dark-toggle-text">
+            <h4 id="dark-mode-label">Light Mode</h4>
+            <span>Klik untuk mengubah tampilan terang/gelap</span>
+          </div>
+        </div>
+        <label class="big-toggle" onclick="event.stopPropagation();toggleDarkMode()">
+          <input type="checkbox" id="s-dark-mode" onchange="toggleDarkMode()">
+          <span class="big-toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- ── Settings Grid ── -->
+      <div class="settings-grid">
+
+        <!-- 1. Profil Pengguna -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:var(--copper-pale);color:var(--copper)"><i class="fas fa-user"></i></div>
+            <div><h3>Profil Pengguna</h3><p>Nama tampilan dan kontak</p></div>
+          </div>
+          <div class="settings-card-body">
+            <div class="form-field"><label class="form-label">Nama Tampilan</label>
+              <input class="form-input" id="s-name" type="text" placeholder="Nama yang ditampilkan di sistem"></div>
+            <div class="form-field"><label class="form-label">No. HP / Darurat</label>
+              <input class="form-input" id="s-phone" type="tel" placeholder="08xx-xxxx-xxxx"></div>
+            <div class="form-field" style="margin-bottom:0"><label class="form-label">Email</label>
+              <input class="form-input" id="s-email" type="email" placeholder="email@contoh.com"></div>
+          </div>
+        </div>
+
+        <!-- 2. Notifikasi -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:var(--info-bg);color:var(--info)"><i class="fas fa-bell"></i></div>
+            <div><h3>Notifikasi</h3><p>Toast dan peringatan sistem</p></div>
+          </div>
+          <div class="settings-card-body">
+            <div class="form-field"><label class="form-label">Durasi Toast (ms)</label>
+              <input class="form-input" id="s-toast-dur" type="number" min="1000" max="10000" step="500">
+              <div class="form-hint">Seberapa lama notifikasi toast muncul (1000–10000 ms)</div>
+            </div>
+            <div class="form-field"><label class="form-label">Tampilkan Alert dari Level</label>
+              <select class="form-select" id="s-alert-level">
+                <option value="BAHAYA">Bahaya saja</option>
+                <option value="SIAGA">Siaga ke atas</option>
+                <option value="WASPADA">Waspada ke atas</option>
+                <option value="NORMAL">Semua level</option>
+              </select>
+            </div>
+            <div class="setting-row" style="margin-bottom:0">
+              <div class="setting-row-label"><h4>Suara Notifikasi</h4><p>Bunyi saat alert masuk</p></div>
+              <label class="sig-toggle"><input type="checkbox" id="s-sound"><span class="sig-toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Tampilan -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:rgba(155,89,182,.1);color:#9B59B6"><i class="fas fa-palette"></i></div>
+            <div><h3>Tampilan</h3><p>Ukuran font dan bahasa</p></div>
+          </div>
+          <div class="settings-card-body">
+            <div class="form-field"><label class="form-label">Ukuran Font</label>
+              <select class="form-select" id="s-font-size">
+                <option value="small">Kecil (13px)</option>
+                <option value="medium">Sedang (14px)</option>
+                <option value="large">Besar (16px)</option>
+              </select>
+            </div>
+            <div class="form-field"><label class="form-label">Bahasa</label>
+              <select class="form-select" id="s-language">
+                <option value="id">Bahasa Indonesia</option>
+                <option value="en">English</option>
+              </select>
+            </div>
+            <div class="form-field" style="margin-bottom:0"><label class="form-label">Zona Waktu</label>
+              <select class="form-select" id="s-timezone">
+                <option value="Asia/Jakarta">WIB — Asia/Jakarta (UTC+7)</option>
+                <option value="Asia/Makassar">WITA — Asia/Makassar (UTC+8)</option>
+                <option value="Asia/Jayapura">WIT — Asia/Jayapura (UTC+9)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Manajemen Data -->
+        <div class="settings-card">
+          <div class="settings-card-header">
+            <div class="settings-card-icon" style="background:var(--danger-bg);color:var(--danger)"><i class="fas fa-database"></i></div>
+            <div><h3>Manajemen Data</h3><p>Backup, import, dan reset</p></div>
+          </div>
+          <div class="settings-card-body">
+            <!-- Storage info -->
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:12px">
+              <span style="font-weight:700;color:var(--text)">Total penyimpanan DRCC</span>
+              <span id="storage-total" style="font-family:var(--font-mono);font-weight:800;color:var(--copper)">— KB</span>
+            </div>
+            <div id="storage-breakdown" style="margin-bottom:16px"></div>
+
+            <!-- Export / Import -->
+            <div class="data-action-grid" style="margin-bottom:10px">
+              <button class="data-action-btn" onclick="exportAllData()" type="button"><i class="fas fa-cloud-arrow-down" style="color:var(--copper)"></i>Backup Semua (JSON)</button>
+              <button class="data-action-btn" onclick="importBackup()" type="button"><i class="fas fa-cloud-arrow-up" style="color:var(--info)"></i>Import Backup</button>
+              <button class="data-action-btn" onclick="exportIncidentsCSV()" type="button"><i class="fas fa-file-csv" style="color:var(--success)"></i>Export Insiden CSV</button>
+              <button class="data-action-btn" onclick="exportResourcesCSV()" type="button"><i class="fas fa-file-csv" style="color:var(--success)"></i>Export Sumber Daya CSV</button>
+            </div>
+
+            <!-- Reset -->
+            <div style="border-top:1px solid var(--border);padding-top:12px">
+              <div style="font-size:11px;font-weight:700;color:var(--danger);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Zona Berbahaya</div>
+              <div class="data-action-grid">
+                <button class="data-action-btn danger" onclick="resetData('drcc_incidents')"   type="button"><i class="fas fa-trash" style="color:var(--danger)"></i>Hapus Insiden</button>
+                <button class="data-action-btn danger" onclick="resetData('drcc_resources')"   type="button"><i class="fas fa-trash" style="color:var(--danger)"></i>Hapus Sumber Daya</button>
+                <button class="data-action-btn danger" onclick="resetData('drcc_ai_history')"  type="button"><i class="fas fa-trash" style="color:var(--danger)"></i>Hapus AI History</button>
+                <button class="data-action-btn danger" onclick="resetAllData()"                type="button" style="grid-column:1/-1;border-color:var(--danger)"><i class="fas fa-nuke" style="color:var(--danger)"></i>RESET SEMUA DATA</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /settings-grid -->
+
+      <!-- Save button (bottom) -->
+      <div style="display:flex;justify-content:flex-end;margin-top:20px">
+        <button class="btn btn-primary btn-lg" onclick="saveSettings()" type="button">
+          <i class="fas fa-save"></i> Simpan Semua Pengaturan
+        </button>
+      </div>
+
+    </main>
+  </div>
+</div>
+<div id="toast-container"></div>
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/data/storage.js"></script>
+<script src="../assets/js/data/mock-data.js"></script>
+<script src="../assets/js/utils/helpers.js"></script>
+<script src="../assets/js/utils/validators.js"></script>
+<script src="../assets/js/utils/export.js"></script>
+<script src="../assets/js/pages/settings.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initSettings);</script>
+</body>
+</html>

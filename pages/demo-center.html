@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Demo Center — DRCC UAS</title>
+  <script>try{if(JSON.parse(localStorage.getItem('drcc_dark_mode')))document.documentElement.classList.add('dark-mode')}catch(e){}</script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/tables.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <style>
+    .demo-scenario-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+    .demo-scenario-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+    .demo-scenario-card.running{border-color:var(--copper);background:var(--copper-pale)}
+    .demo-scenario-card.done{border-color:var(--success)}
+    .demo-scenario-card .scn-strip{position:absolute;top:0;left:0;width:4px;height:100%}
+    .scn-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+    .exec-log{height:340px;overflow-y:auto;background:var(--dark-2);border-radius:10px;padding:10px;font-size:11px;font-family:var(--font-mono)}
+    .exec-log-entry{padding:4px 6px;border-radius:4px;margin-bottom:3px;display:flex;gap:8px;align-items:flex-start}
+    .exec-log-entry .log-time{color:#64748B;flex-shrink:0;font-size:10px;padding-top:1px}
+    .exec-log-entry .log-msg{flex:1;color:#E2E8F0;line-height:1.4}
+    .layer-pill{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;margin-right:4px;flex-shrink:0}
+    .progress-tracker{display:flex;gap:6px;align-items:center;padding:12px 0}
+    .pt-step{flex:1;height:6px;border-radius:3px;background:var(--border);transition:background .4s}
+    .pt-step.done{background:var(--success)}
+    .pt-step.active{background:var(--copper);animation:pulse 1s ease infinite}
+    .layer-status-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px}
+    @media(max-width:768px){.demo-grid{grid-template-columns:1fr!important}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div><div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div></div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button"><i class="fas fa-angles-left" id="sidebar-toggle-icon"></i><span>Sembunyikan Panel</span></button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button"><i class="fas fa-right-from-bracket"></i><span>Keluar</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="main-area">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title"><h4 id="page-title">Demo Center</h4><span id="page-subtitle">UAS Presentation</span></div>
+      </div>
+      <div class="navbar-center"><div class="sys-status"><div class="sys-dot"></div><span>DEMO MODE</span></div></div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge" style="display:none">0</span></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user"><div class="user-avatar" id="user-avatar">AD</div><div class="user-info"><span class="user-name" id="user-name">Admin</span><span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span></div></div>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2>🎓 Demo Center — Bukti UAS</h2>
+          <p>10 Skenario bencana siap jalankan · Trace end-to-end 5 Layer · Export bukti JSON/CSV</p>
+        </div>
+        <div class="page-header-right">
+          <button class="btn btn-secondary btn-sm" onclick="resetAllDemos()" type="button"><i class="fas fa-rotate-left"></i> Reset</button>
+          <button class="btn btn-secondary btn-sm" onclick="EvidenceCollector.exportCSV()" type="button"><i class="fas fa-file-csv"></i> CSV</button>
+          <button class="btn btn-secondary btn-sm" onclick="EvidenceCollector.exportJSON()" type="button"><i class="fas fa-file-code"></i> JSON</button>
+          <button class="btn btn-primary btn-sm"   onclick="runAllScenarios()" type="button" id="btn-run-all"><i class="fas fa-play"></i> Jalankan Semua (10)</button>
+        </div>
+      </div>
+
+      <!-- 5 Layer Status Bar -->
+      <div class="layer-status-bar" id="layer-status-bar">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);white-space:nowrap">5 LAYER:</span>
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Evidence Summary -->
+      <div id="evidence-summary" style="margin-bottom:16px"><!-- filled by JS --></div>
+
+      <!-- Main Grid: Scenarios + Log -->
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:16px" class="demo-main-grid">
+
+        <!-- LEFT: Scenario Cards -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h3 style="font-size:15px;font-weight:800">
+              10 Skenario Demo
+              <span id="done-count" style="background:var(--success);color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-left:6px">0/10</span>
+            </h3>
+            <span style="font-size:11px;color:var(--text-muted)">Klik kartu atau tombol ▶ untuk jalankan</span>
+          </div>
+
+          <div id="scenario-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="demo-grid">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <!-- RIGHT: Execution Log + Trace -->
+        <div>
+          <!-- Progress tracker -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:12px;font-weight:800;color:var(--text)">Progress Eksekusi</span>
+              <span id="running-scn" style="font-size:11px;color:var(--text-muted)">Idle</span>
+            </div>
+            <div class="progress-tracker" id="progress-tracker">
+              <!-- 5 steps -->
+              <div class="pt-step" id="pt-1" title="Layer 1: Input"></div>
+              <div class="pt-step" id="pt-2" title="Layer 2: Processing"></div>
+              <div class="pt-step" id="pt-3" title="Layer 3: AI Agent"></div>
+              <div class="pt-step" id="pt-4" title="Layer 4: Decision"></div>
+              <div class="pt-step" id="pt-5" title="Layer 5: Action"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted)">
+              <span>L1:Signal</span><span>L2:Process</span><span>L3:AI</span><span>L4:Decide</span><span>L5:Action</span>
+            </div>
+          </div>
+
+          <!-- Execution Log -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:12px;font-weight:800;color:var(--text)"><i class="fas fa-terminal" style="color:var(--copper)"></i> Execution Log</span>
+              <button onclick="document.getElementById('exec-log').innerHTML=''" style="background:none;border:none;font-size:10px;color:var(--text-muted);cursor:pointer">Clear</button>
+            </div>
+            <div class="exec-log" id="exec-log">
+              <div class="exec-log-entry"><span class="log-time">--:--:--</span><span class="log-msg" style="color:#64748B">Sistem siap. Klik "Jalankan Semua" atau pilih skenario individual...</span></div>
+            </div>
+          </div>
+
+          <!-- Trace Viewer -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+            <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px"><i class="fas fa-route" style="color:var(--copper)"></i> End-to-End Trace</div>
+            <div id="trace-panel">
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px">Jalankan skenario untuk melihat trace</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /main grid -->
+
+    </main>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<!-- Core scripts -->
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/data/storage.js"></script>
+<script src="../assets/js/core/router.js"></script>
+<script src="../assets/js/core/state.js"></script>
+<script src="../assets/js/core/logger.js"></script>
+<script src="../assets/js/data/schema.js"></script>
+<script src="../assets/js/data/mock-data.js"></script>
+<script src="../assets/js/data/demo-scenarios.js"></script>
+<script src="../assets/js/data/api.js"></script>
+<script src="../assets/js/components/anomaly-detector.js"></script>
+<script src="../assets/js/pages/signal-processing.js"></script>
+<script src="../assets/js/components/reasoning-engine.js"></script>
+<script src="../assets/js/components/multi-agent.js"></script>
+<script src="../assets/js/components/decision-tree.js"></script>
+<script src="../assets/js/components/signal-flow.js"></script>
+<script src="../assets/js/utils/evidence-collector.js"></script>
+<script src="../assets/js/utils/trace-viewer.js"></script>
+<script src="../assets/js/core/demo-mode.js"></script>
+<script src="../assets/js/core/evidence-report.js"></script>
+
+<script>
+/* ============================================================
+   demo-center.js (inline)
+   ============================================================ */
+const LAYER_COLORS = {1:'#2980B9',2:'#E67E22',3:'#B5651D',4:'#8E44AD',5:'#27AE60'};
+const LAYER_NAMES  = {1:'L1:Input',2:'L2:Process',3:'L3:AI',4:'L4:Decide',5:'L5:Action'};
+
+function initDemoCenter() {
+  buildAppShell('demo-center','Demo Center','10 Skenario UAS · 5 Layer Architecture');
+  SignalFlow.injectCSS();
+  renderScenarioGrid();
+  renderLayerStatusBar();
+  refreshEvidenceSummary();
+  refreshDoneCount();
+
+  /* Listen for state updates */
+  if (window.State) {
+    State.on('demo:complete', () => { refreshEvidenceSummary(); renderScenarioGrid(); refreshDoneCount(); });
+    State.on('storage:any',   () => { renderLayerStatusBar(); refreshEvidenceSummary(); });
+  }
+}
+
+/* ---- SCENARIO GRID ---- */
+function renderScenarioGrid() {
+  const container = document.getElementById('scenario-grid');
+  if (!container) return;
+  container.innerHTML = DEMO_SCENARIOS.map(scn => {
+    const done = DemoMode.isComplete(scn.id);
+    const lvlColor = {HIGH:'#E74C3C',MEDIUM:'#E67E22',LOW:'#27AE60'}[scn.level]||'#6C757D';
+    return `
+      <div class="demo-scenario-card ${done?'done':''}" onclick="runSingle('${scn.id}')" id="card-${scn.id}">
+        <div class="scn-strip" style="background:${scn.color}"></div>
+        <div style="display:flex;align-items:flex-start;gap:8px;padding-left:8px">
+          <div style="width:30px;height:30px;border-radius:8px;background:${scn.color}22;color:${scn.color};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px"><i class="fas ${scn.icon}"></i></div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:800;color:var(--text);line-height:1.3">${scn.no}. ${scn.name}</div>
+            <div style="font-size:10px;color:var(--text-muted);margin-top:2px">${scn.location}, ${scn.province}</div>
+            <div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">
+              <span class="scn-badge" style="background:${lvlColor}18;color:${lvlColor}">${scn.level}</span>
+              <span class="scn-badge" style="background:var(--border);color:var(--text-muted)">M${scn.magnitude}</span>
+              <span class="scn-badge" style="background:var(--border);color:var(--text-muted)">${(scn.population/1000).toFixed(0)}k jiwa</span>
+            </div>
+          </div>
+          <div style="flex-shrink:0">
+            ${done
+              ? `<span style="color:var(--success);font-size:18px">✅</span>`
+              : `<button onclick="event.stopPropagation();runSingle('${scn.id}')" style="background:var(--copper);color:#fff;border:none;border-radius:6px;padding:4px 8px;font-size:10px;font-weight:700;cursor:pointer"><i class="fas fa-play"></i></button>`
+            }
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ---- LAYER STATUS BAR ---- */
+function renderLayerStatusBar() {
+  const bar = document.getElementById('layer-status-bar');
+  if (!bar) return;
+  const status = Schema.getLayerStatus();
+  const layers = [
+    {id:1,name:'Input Signal',icon:'fa-satellite-dish'},
+    {id:2,name:'Processing',  icon:'fa-microchip'},
+    {id:3,name:'AI Agent',    icon:'fa-brain'},
+    {id:4,name:'Decision',    icon:'fa-scale-balanced'},
+    {id:5,name:'User Action', icon:'fa-user-shield'},
+  ];
+  const score = Schema.getCompletenessScore();
+
+  bar.innerHTML = `<span style="font-size:11px;font-weight:700;color:var(--text-muted);white-space:nowrap">5 LAYER:</span>` +
+    layers.map((l,i) => {
+      const done = status[l.id];
+      const col  = LAYER_COLORS[l.id];
+      return `
+        ${i>0?'<i class="fas fa-chevron-right" style="color:var(--text-light);font-size:9px;flex-shrink:0"></i>':''}
+        <div style="display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:8px;border:1.5px solid ${done?col:'var(--border)'};background:${done?col+'18':'var(--bg)'};flex:1;min-width:0">
+          <i class="fas ${l.icon}" style="color:${done?col:'var(--text-light)'};font-size:12px;flex-shrink:0"></i>
+          <div style="min-width:0">
+            <div style="font-size:9px;color:var(--text-muted)">Layer ${l.id}</div>
+            <div style="font-size:10px;font-weight:700;color:${done?col:'var(--text-light)'}">${l.name}</div>
+          </div>
+          <span style="margin-left:auto;font-size:14px">${done?'✅':'○'}</span>
+        </div>`;
+    }).join('') +
+    `<div style="padding:6px 12px;background:${score.score===100?'rgba(39,174,96,.15)':'rgba(181,101,29,.15)'};border-radius:8px;flex-shrink:0;text-align:center">
+      <div style="font-size:9px;color:var(--text-muted)">Completeness</div>
+      <div style="font-size:18px;font-weight:900;color:${score.score===100?'var(--success)':'var(--copper)'}">${score.score}%</div>
+    </div>`;
+}
+
+/* ---- EVIDENCE SUMMARY ---- */
+function refreshEvidenceSummary() {
+  const el = document.getElementById('evidence-summary');
+  if (!el || !window.EvidenceReport) return;
+  el.innerHTML = EvidenceReport.renderCard();
+}
+
+/* ---- DONE COUNT ---- */
+function refreshDoneCount() {
+  const n = DemoMode.getCompletedCount();
+  const el = document.getElementById('done-count');
+  if (el) el.textContent = `${n}/10`;
+}
+
+/* ---- RUN SINGLE SCENARIO ---- */
+async function runSingle(scenarioId) {
+  const scn = DEMO_SCENARIOS.find(s => s.id === scenarioId);
+  if (!scn) return;
+
+  /* Mark card as running */
+  const card = document.getElementById('card-'+scenarioId);
+  if (card) card.classList.add('running');
+
+  const running = document.getElementById('running-scn');
+  if (running) running.textContent = `▶ ${scn.name}`;
+
+  /* Reset progress */
+  for (let i=1;i<=5;i++) { const el=document.getElementById('pt-'+i); if(el){el.className='pt-step';} }
+
+  addLog(`▶ Memulai: ${scn.name}`, null, 'info');
+
+  await DemoMode.runScenario(scenarioId, (state) => {
+    const last = state.steps[state.steps.length-1];
+    if (!last) return;
+
+    /* Progress bar */
+    for (let i=1;i<=last.layer;i++) {
+      const el = document.getElementById('pt-'+i);
+      if (el) el.className = 'pt-step ' + (i < last.layer ? 'done' : 'active');
+    }
+
+    /* Log entry */
+    const done = state.done || false;
+    addLog(last.desc, last.layer, done ? 'success':'processing');
+
+    /* Mark all done */
+    if (done) {
+      for (let i=1;i<=5;i++) { const el=document.getElementById('pt-'+i); if(el) el.className='pt-step done'; }
+      if (running) running.textContent = `✅ ${scn.name} — Selesai`;
+      if (card) { card.classList.remove('running'); card.classList.add('done'); }
+      addLog(`✅ Trace selesai: ${scn.id} → L1→L2→L3→L4→L5 ✓`, null, 'success');
+      refreshDoneCount();
+      refreshEvidenceSummary();
+      renderLayerStatusBar();
+      renderScenarioGrid();
+
+      /* Show trace */
+      const tp = document.getElementById('trace-panel');
+      if (tp && window.TraceViewer) tp.innerHTML = TraceViewer.renderHTML(scenarioId);
+    }
+  });
+}
+
+/* ---- RUN ALL ---- */
+async function runAllScenarios() {
+  const btn = document.getElementById('btn-run-all');
+  if (btn) { btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Menjalankan...'; }
+
+  for (const scn of DEMO_SCENARIOS) {
+    addLog(`─── Mulai Skenario ${scn.no}: ${scn.name} ───`, null, 'separator');
+    await runSingle(scn.id);
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  if (btn) { btn.disabled=false; btn.innerHTML='<i class="fas fa-check"></i> Semua Selesai!'; }
+  Toast.success('🎓 Demo Selesai!','Semua 10 skenario berhasil dijalankan — bukti UAS siap diekspor');
+}
+
+/* ---- LOG HELPER ---- */
+function addLog(msg, layer, type='info') {
+  const log = document.getElementById('exec-log');
+  if (!log) return;
+  const now = new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const colors = { info:'#94A3B8', success:'#4ADE80', processing:'#FB923C', separator:'#B5651D', error:'#F87171' };
+  const lc = layer ? LAYER_COLORS[layer] : '#64748B';
+  const layerTag = layer ? `<span class="layer-pill" style="background:${lc}33;color:${lc}">L${layer}</span>` : '';
+  const div = document.createElement('div');
+  div.className='exec-log-entry';
+  div.innerHTML=`<span class="log-time">${now}</span>${layerTag}<span class="log-msg" style="color:${colors[type]||'#E2E8F0'}">${msg}</span>`;
+  log.insertBefore(div, log.firstChild);
+}
+
+/* ---- RESET ---- */
+function resetAllDemos() {
+  showConfirm('Reset semua data demo? Insiden, AI history, dan evidence akan dihapus.', () => {
+    DemoMode.clearRuns();
+    EvidenceCollector.clear();
+    if (window.AnomalyDetector) AnomalyDetector.clear();
+    if (window.SignalProcessing) SignalProcessing.clearLog();
+    if (window.ReasoningEngine) ReasoningEngine.clear();
+    if (window.MultiAgent) MultiAgent.clear();
+    if (window.DecisionTree) DecisionTree.clear();
+    ['drcc_incidents','drcc_ai_history'].forEach(k => localStorage.removeItem(k));
+    renderScenarioGrid();
+    renderLayerStatusBar();
+    refreshEvidenceSummary();
+    refreshDoneCount();
+    document.getElementById('exec-log').innerHTML='<div class="exec-log-entry"><span class="log-msg" style="color:#64748B">Reset selesai. Siap jalankan ulang.</span></div>';
+    document.getElementById('trace-panel').innerHTML='<div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px">Jalankan skenario untuk melihat trace</div>';
+    Toast.success('Reset Selesai','Data demo dihapus');
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initDemoCenter);
+</script>
+</body>
+</html>
