@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Signal Monitor — DRCC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>try{if(localStorage.getItem('drcc_dark_mode')==='true')document.documentElement.classList.add('dark-mode')}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/signals.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div>
+      <div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div>
+    </div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button">
+        <i class="fas fa-angles-left" id="sidebar-toggle-icon"></i>
+        <span>Sembunyikan Panel</span>
+      </button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button">
+        <i class="fas fa-right-from-bracket"></i><span>Keluar</span>
+      </button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+  <div class="main-area">
+    <!-- NAVBAR -->
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title">
+          <h4 id="page-title">Signal Monitor</h4>
+          <span id="page-subtitle">Pemantauan sinyal bencana</span>
+        </div>
+      </div>
+      <div class="navbar-center">
+        <div class="sys-status"><div class="sys-dot"></div><span>SISTEM AKTIF</span></div>
+      </div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge">3</span></button>
+        <button class="navbar-btn" type="button"><i class="fas fa-circle-question"></i></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user">
+          <div class="user-avatar" id="user-avatar">AD</div>
+          <div class="user-info">
+            <span class="user-name" id="user-name">Administrator</span>
+            <span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- PAGE CONTENT -->
+    <main class="page-content" id="page-content">
+
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2>Signal Monitor</h2>
+          <p>7 sumber sinyal bencana · Status real-time &amp; LocalStorage cache</p>
+        </div>
+        <div class="page-header-right">
+          <span style="font-size:11px;color:var(--text-muted)" id="last-saved">Belum tersimpan</span>
+          <button class="btn btn-primary btn-sm" onclick="showAddSignalModal()" type="button">
+            <i class="fas fa-plus"></i> Tambah Sinyal
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="saveToStorage()" type="button">
+            <i class="fas fa-floppy-disk"></i> Simpan Cache
+          </button>
+          <button class="btn btn-secondary btn-sm" onclick="exportSignalCSV()" type="button">
+            <i class="fas fa-file-csv"></i> Ekspor
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="clearHistory()" type="button" title="Hapus riwayat">
+            <i class="fas fa-trash" style="color:var(--danger)"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- STATUS SUMMARY + FILTER -->
+      <div class="status-summary">
+        <div class="sum-divider"><i class="fas fa-circle-nodes"></i> Status:</div>
+        <div class="status-summary-pill pill-normal"><span class="pill-count" id="count-normal">7</span> Normal</div>
+        <div class="status-summary-pill pill-waspada"><span class="pill-count" id="count-waspada">0</span> Waspada</div>
+        <div class="status-summary-pill pill-siaga"><span class="pill-count" id="count-siaga">0</span> Siaga</div>
+        <div class="status-summary-pill pill-bahaya"><span class="pill-count" id="count-bahaya">0</span> Bahaya</div>
+        <div class="status-summary-pill pill-nonaktif"><span class="pill-count" id="count-nonaktif">0</span> Nonaktif</div>
+        <div class="filter-tabs" style="margin-left:auto">
+          <div class="filter-tab active" data-filter="all"      onclick="filterSignals('all')">Semua</div>
+          <div class="filter-tab"        data-filter="sensor"   onclick="filterSignals('sensor')">Sensor</div>
+          <div class="filter-tab"        data-filter="ops"      onclick="filterSignals('ops')">Operasional</div>
+          <div class="filter-tab"        data-filter="visual"   onclick="filterSignals('visual')">Visual</div>
+          <div class="filter-tab"        data-filter="sosmed"   onclick="filterSignals('sosmed')">Sosmed</div>
+          <div class="filter-tab"        data-filter="inactive" onclick="filterSignals('inactive')">Nonaktif</div>
+        </div>
+      </div>
+
+      <!-- SIGNAL GRID -->
+      
+      <!-- LAYER 2: Signal Processing Panel -->
+      <div style="background:var(--surface);border:1.5px solid var(--copper);border-radius:14px;padding:16px;margin-bottom:16px" id="processing-panel">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:10px;background:rgba(181,101,29,.12);color:var(--copper);display:flex;align-items:center;justify-content:center;font-size:16px"><i class="fas fa-microchip"></i></div>
+            <div><h3 style="font-size:14px;font-weight:800;color:var(--text)">Layer 2 — Signal Processing</h3><p style="font-size:11px;color:var(--text-muted)">Filter → Feature Extraction → Anomaly Detection → Priority Score</p></div>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="generateAllDemoData()" type="button"><i class="fas fa-database"></i> Generate 10 Demo Data</button>
+            <button class="btn btn-secondary btn-sm" onclick="clearProcLog()" type="button"><i class="fas fa-eraser"></i> Clear Log</button>
+          </div>
+        </div>
+
+        <!-- Before/After Comparison -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px">
+            <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">RAW SIGNAL (Before Filter)</div>
+            <div id="raw-signal-display" style="font-family:var(--font-mono);font-size:12px;color:var(--danger)">—</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px">
+            <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px">FILTERED SIGNAL (After)</div>
+            <div id="filtered-signal-display" style="font-family:var(--font-mono);font-size:12px;color:var(--success)">—</div>
+          </div>
+        </div>
+
+        <!-- Anomaly Alerts -->
+        <div id="anomaly-alerts" style="margin-bottom:10px"></div>
+
+        <!-- Processing Log -->
+        <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:6px">Processing Log Real-Time</div>
+        <div id="proc-log-container" style="height:160px;overflow-y:auto;background:var(--dark-2,#1a2030);border-radius:8px;padding:8px;font-size:11px;font-family:var(--font-mono)">
+          <div style="color:#64748B">Klik "Generate 10 Demo Data" untuk memulai processing...</div>
+        </div>
+
+        <!-- Layer Status -->
+        <div id="layer-status-bar-signals" style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap"></div>
+      </div>
+
+      <div class="signal-grid" id="signal-grid"></div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===== ADD SIGNAL MODAL ===== -->
+<div class="add-signal-modal hidden" id="add-signal-modal" onclick="if(event.target===this)hideAddSignalModal()">
+  <div class="add-signal-modal-box">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-plus-circle" style="color:var(--copper)"></i> Tambah Sinyal Baru</div>
+      <button class="modal-close" onclick="hideAddSignalModal()" type="button"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="add-signal-form" onsubmit="event.preventDefault(); submitAddSignal()">
+        <div class="form-field">
+          <label class="form-label">Nama Sinyal <span class="req">*</span></label>
+          <input class="form-input" id="f-name" type="text" placeholder="cth: Getaran Jembatan" required>
+        </div>
+        <div class="modal-form-grid">
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Tipe</label>
+            <select class="form-select" id="f-type">
+              <option value="sensor">Sensor</option>
+              <option value="visual">Visual / CCTV</option>
+              <option value="sosmed">Sosial Media</option>
+              <option value="ops">Operasional</option>
+            </select>
+          </div>
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Satuan (Unit)</label>
+            <input class="form-input" id="f-unit" type="text" placeholder="cth: ppm, %, m/s">
+          </div>
+        </div>
+        <div class="form-field">
+          <label class="form-label">Sumber Data</label>
+          <input class="form-input" id="f-source" type="text" placeholder="cth: Sensor IoT Jembatan Ampera">
+        </div>
+        <div class="modal-form-grid">
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Nilai Awal</label>
+            <input class="form-input" id="f-value" type="number" step="any" placeholder="0">
+          </div>
+          <div class="form-field" style="margin-bottom:0">
+            <label class="form-label">Ambang WASPADA</label>
+            <input class="form-input" id="f-thresh-warn" type="number" step="any" placeholder="Opsional">
+          </div>
+        </div>
+        <div class="form-field" style="margin-bottom:0;margin-top:8px">
+          <label class="form-label">Ambang BAHAYA</label>
+          <input class="form-input" id="f-thresh-bad" type="number" step="any" placeholder="Opsional">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideAddSignalModal()" type="button">Batal</button>
+      <button class="btn btn-primary" onclick="submitAddSignal()" type="button">
+        <i class="fas fa-plus"></i> Tambahkan
+      </button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/core/api-client.js"></script>
+<script src="../assets/js/core/socket-client.js"></script>
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/core/state.js"></script>
+
+<script src="../assets/js/pages/signals.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initSignals);</script>
+</body>
+</html>

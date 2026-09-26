@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Prediksi — DRCC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem('drcc_dark_mode')==='true')document.documentElement.classList.add('dark-mode')}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/tables.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div><div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div></div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button"><i class="fas fa-angles-left" id="sidebar-toggle-icon"></i><span>Sembunyikan Panel</span></button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button"><i class="fas fa-right-from-bracket"></i><span>Keluar</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="main-area">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title"><h4 id="page-title">Prediksi</h4><span id="page-subtitle">Riwayat analisis AI</span></div>
+      </div>
+      <div class="navbar-center"><div class="sys-status"><div class="sys-dot"></div><span>SISTEM AKTIF</span></div></div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge" style="display:none">0</span></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user"><div class="user-avatar" id="user-avatar">AD</div><div class="user-info"><span class="user-name" id="user-name">Admin</span><span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span></div></div>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left"><h2>Prediksi AI</h2><p>Riwayat analisis dan prediksi dari AI Command Panel</p></div>
+        <div class="page-header-right">
+          <a href="ai-command.html" class="btn btn-primary btn-sm"><i class="fas fa-brain"></i> Analisis Baru</a>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="crud-stats" id="pred-stats">
+        <div class="crud-stat-card total"><div class="crud-stat-num" id="ps-total">0</div><div class="crud-stat-label">Total Analisis</div></div>
+        <div class="crud-stat-card aktif"><div class="crud-stat-num" id="ps-bahaya">0</div><div class="crud-stat-label">Level Bahaya</div></div>
+        <div class="crud-stat-card medium"><div class="crud-stat-num" id="ps-siaga">0</div><div class="crud-stat-label">Level Siaga</div></div>
+        <div class="crud-stat-card done"><div class="crud-stat-num" id="ps-normal">0</div><div class="crud-stat-label">Level Normal</div></div>
+      </div>
+
+      <!-- History List -->
+      <div id="pred-list" style="margin-top:16px"></div>
+
+      <!-- Empty State -->
+      <div id="pred-empty" style="display:none;text-align:center;padding:60px 20px">
+        <i class="fas fa-chart-line" style="font-size:48px;color:var(--text-light);display:block;margin-bottom:16px"></i>
+        <h3 style="color:var(--text-muted);font-size:16px;margin-bottom:8px">Belum Ada Prediksi</h3>
+        <p style="color:var(--text-light);font-size:13px;margin-bottom:20px">Jalankan analisis di AI Command Panel untuk melihat riwayat prediksi</p>
+        <a href="ai-command.html" class="btn btn-primary"><i class="fas fa-brain"></i> Buka AI Command</a>
+      </div>
+
+    </main>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/core/api-client.js"></script>
+<script src="../assets/js/core/socket-client.js"></script>
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/core/state.js"></script>
+
+<script src="../assets/js/pages/predictions.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initPredictions);</script>
+</body>
+</html>

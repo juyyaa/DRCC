@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Demo Center — DRCC UAS</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script>try{if(localStorage.getItem('drcc_dark_mode')==='true')document.documentElement.classList.add('dark-mode')}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/tables.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+  <style>
+    .demo-scenario-card{background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden}
+    .demo-scenario-card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+    .demo-scenario-card.running{border-color:var(--copper);background:var(--copper-pale)}
+    .demo-scenario-card.done{border-color:var(--success)}
+    .demo-scenario-card .scn-strip{position:absolute;top:0;left:0;width:4px;height:100%}
+    .scn-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+    .exec-log{height:340px;overflow-y:auto;background:var(--dark-2);border-radius:10px;padding:10px;font-size:11px;font-family:var(--font-mono)}
+    .exec-log-entry{padding:4px 6px;border-radius:4px;margin-bottom:3px;display:flex;gap:8px;align-items:flex-start}
+    .exec-log-entry .log-time{color:#64748B;flex-shrink:0;font-size:10px;padding-top:1px}
+    .exec-log-entry .log-msg{flex:1;color:#E2E8F0;line-height:1.4}
+    .layer-pill{display:inline-block;padding:1px 6px;border-radius:10px;font-size:9px;font-weight:700;margin-right:4px;flex-shrink:0}
+    .progress-tracker{display:flex;gap:6px;align-items:center;padding:12px 0}
+    .pt-step{flex:1;height:6px;border-radius:3px;background:var(--border);transition:background .4s}
+    .pt-step.done{background:var(--success)}
+    .pt-step.active{background:var(--copper);animation:pulse 1s ease infinite}
+    .layer-status-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);margin-bottom:16px}
+    @media(max-width:768px){.demo-grid{grid-template-columns:1fr!important}}
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div><div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div></div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button"><i class="fas fa-angles-left" id="sidebar-toggle-icon"></i><span>Sembunyikan Panel</span></button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button"><i class="fas fa-right-from-bracket"></i><span>Keluar</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="main-area">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title"><h4 id="page-title">Demo Center</h4><span id="page-subtitle">UAS Presentation</span></div>
+      </div>
+      <div class="navbar-center"><div class="sys-status"><div class="sys-dot"></div><span>DEMO MODE</span></div></div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge" style="display:none">0</span></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user"><div class="user-avatar" id="user-avatar">AD</div><div class="user-info"><span class="user-name" id="user-name">Admin</span><span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span></div></div>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left">
+          <h2>🎓 Demo Center — Bukti UAS</h2>
+          <p>10 Skenario bencana siap jalankan · Trace end-to-end 5 Layer · Export bukti JSON/CSV</p>
+        </div>
+        <div class="page-header-right">
+          <button class="btn btn-secondary btn-sm" onclick="resetAllDemos()" type="button"><i class="fas fa-rotate-left"></i> Reset</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportEvidenceJSON()" type="button"><i class="fas fa-file-code"></i> Export JSON</button>
+          <button class="btn btn-primary btn-sm"   onclick="runAllScenarios()" type="button" id="btn-run-all"><i class="fas fa-play"></i> Jalankan Semua (10)</button>
+        </div>
+      </div>
+
+      <!-- 5 Layer Status Bar -->
+      <div class="layer-status-bar" id="layer-status-bar">
+        <span style="font-size:11px;font-weight:700;color:var(--text-muted);white-space:nowrap">5 LAYER:</span>
+        <!-- filled by JS -->
+      </div>
+
+      <!-- Evidence Summary -->
+      <div id="evidence-summary" style="margin-bottom:16px"><!-- filled by JS --></div>
+
+      <!-- Main Grid: Scenarios + Log -->
+      <div style="display:grid;grid-template-columns:1fr 380px;gap:16px" class="demo-main-grid">
+
+        <!-- LEFT: Scenario Cards -->
+        <div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+            <h3 style="font-size:15px;font-weight:800">
+              10 Skenario Demo
+              <span id="done-count" style="background:var(--success);color:#fff;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-left:6px">0/10</span>
+            </h3>
+            <span style="font-size:11px;color:var(--text-muted)">Klik kartu atau tombol ▶ untuk jalankan</span>
+          </div>
+
+          <div id="scenario-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:10px" class="demo-grid">
+            <!-- filled by JS -->
+          </div>
+        </div>
+
+        <!-- RIGHT: Execution Log + Trace -->
+        <div>
+          <!-- Progress tracker -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <span style="font-size:12px;font-weight:800;color:var(--text)">Progress Eksekusi</span>
+              <span id="running-scn" style="font-size:11px;color:var(--text-muted)">Idle</span>
+            </div>
+            <div class="progress-tracker" id="progress-tracker">
+              <!-- 5 steps -->
+              <div class="pt-step" id="pt-1" title="Layer 1: Input"></div>
+              <div class="pt-step" id="pt-2" title="Layer 2: Processing"></div>
+              <div class="pt-step" id="pt-3" title="Layer 3: AI Agent"></div>
+              <div class="pt-step" id="pt-4" title="Layer 4: Decision"></div>
+              <div class="pt-step" id="pt-5" title="Layer 5: Action"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-muted)">
+              <span>L1:Signal</span><span>L2:Process</span><span>L3:AI</span><span>L4:Decide</span><span>L5:Action</span>
+            </div>
+          </div>
+
+          <!-- Execution Log -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:12px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:12px;font-weight:800;color:var(--text)"><i class="fas fa-terminal" style="color:var(--copper)"></i> Execution Log</span>
+              <button onclick="document.getElementById('exec-log').innerHTML=''" style="background:none;border:none;font-size:10px;color:var(--text-muted);cursor:pointer">Clear</button>
+            </div>
+            <div class="exec-log" id="exec-log">
+              <div class="exec-log-entry"><span class="log-time">--:--:--</span><span class="log-msg" style="color:#64748B">Sistem siap. Klik "Jalankan Semua" atau pilih skenario individual...</span></div>
+            </div>
+          </div>
+
+          <!-- Trace Viewer -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px">
+            <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:10px"><i class="fas fa-route" style="color:var(--copper)"></i> End-to-End Trace</div>
+            <div id="trace-panel">
+              <div style="font-size:12px;color:var(--text-muted);text-align:center;padding:20px">Jalankan skenario untuk melihat trace</div>
+            </div>
+          </div>
+        </div>
+      </div><!-- /main grid -->
+
+    </main>
+  </div>
+</div>
+<div id="toast-container"></div>
+
+<!-- Core scripts -->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/core/api-client.js"></script>
+<script src="../assets/js/core/socket-client.js"></script>
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/core/state.js"></script>
+<script src="../assets/js/data/demo-scenarios.js"></script>
+<script src="../assets/js/pages/demo-center.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initDemoCenter);</script>
+</body>
+</html>

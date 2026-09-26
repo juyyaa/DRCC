@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Sumber Daya — DRCC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>try{if(localStorage.getItem('drcc_dark_mode')==='true')document.documentElement.classList.add('dark-mode')}catch(e){}</script>
+  <link rel="stylesheet" href="../assets/css/main.css">
+  <link rel="stylesheet" href="../assets/css/layout.css">
+  <link rel="stylesheet" href="../assets/css/components.css">
+  <link rel="stylesheet" href="../assets/css/animations.css">
+  <link rel="stylesheet" href="../assets/css/forms.css">
+  <link rel="stylesheet" href="../assets/css/responsive.css">
+</head>
+<body>
+<div class="app-shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header"><div class="sidebar-logo"><i class="fas fa-shield-halved"></i></div><div class="sidebar-title"><h3>DRCC</h3><p>Command Center</p></div></div>
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+    <div class="sidebar-footer">
+      <button class="sidebar-footer-btn" onclick="Sidebar.toggle()" type="button"><i class="fas fa-angles-left" id="sidebar-toggle-icon"></i><span>Sembunyikan Panel</span></button>
+      <button class="sidebar-footer-btn danger" onclick="Auth.logout()" type="button"><i class="fas fa-right-from-bracket"></i><span>Keluar</span></button>
+    </div>
+  </aside>
+  <div class="sidebar-overlay" id="sidebar-overlay"></div>
+  <div class="main-area">
+    <header class="navbar">
+      <div class="navbar-left">
+        <button class="navbar-mobile-toggle" onclick="Sidebar.toggle()" type="button"><i class="fas fa-bars"></i></button>
+        <div class="navbar-page-title"><h4 id="page-title">Sumber Daya</h4><span id="page-subtitle">Manajemen aset</span></div>
+      </div>
+      <div class="navbar-center"><div class="sys-status"><div class="sys-dot"></div><span>SISTEM AKTIF</span></div></div>
+      <div class="navbar-right">
+        <div class="navbar-clock" id="navbar-clock">--:--:--</div>
+        <div class="navbar-divider"></div>
+        <button class="navbar-btn" type="button"><i class="fas fa-bell"></i><span class="navbar-badge" id="notif-badge">3</span></button>
+        <div class="navbar-divider"></div>
+        <div class="navbar-user"><div class="user-avatar" id="user-avatar">AD</div><div class="user-info"><span class="user-name" id="user-name">Admin</span><span class="user-role-badge role-admin" id="user-role-badge">Admin BNPB</span></div></div>
+      </div>
+    </header>
+
+    <main class="page-content" id="page-content">
+
+      <!-- Page Header -->
+      <div class="page-header">
+        <div class="page-header-left"><h2>Manajemen Sumber Daya</h2><p>Inventaris aset & penugasan ke insiden aktif</p></div>
+        <div class="page-header-right">
+          <button class="btn btn-primary" onclick="showAddResModal()" type="button"><i class="fas fa-plus"></i> Tambah Sumber Daya</button>
+        </div>
+      </div>
+
+      <!-- Type Summary Cards -->
+      <div class="resource-type-grid" id="type-summary"></div>
+
+      <!-- Stats -->
+      <div class="crud-stats">
+        <div class="crud-stat-card total"><div class="crud-stat-num" id="rst-total">0</div><div class="crud-stat-label">Total</div></div>
+        <div class="crud-stat-card done"><div class="crud-stat-num" id="rst-tersedia">0</div><div class="crud-stat-label">Tersedia</div></div>
+        <div class="crud-stat-card info"><div class="crud-stat-num" id="rst-deployed">0</div><div class="crud-stat-label">Deployed</div></div>
+        <div class="crud-stat-card medium"><div class="crud-stat-num" id="rst-maint">0</div><div class="crud-stat-label">Maintenance</div></div>
+      </div>
+
+      <!-- Toolbar -->
+      <div class="crud-toolbar">
+        <div class="crud-toolbar-left">
+          <div class="filter-tabs">
+            <div class="filter-tab res-filter-tab active" data-f="semua"       onclick="resFilterChange('semua')">Semua</div>
+            <div class="filter-tab res-filter-tab"        data-f="tersedia"    onclick="resFilterChange('tersedia')">Tersedia</div>
+            <div class="filter-tab res-filter-tab"        data-f="deployed"    onclick="resFilterChange('deployed')">Deployed</div>
+            <div class="filter-tab res-filter-tab"        data-f="maintenance" onclick="resFilterChange('maintenance')">Maintenance</div>
+          </div>
+        </div>
+        <div class="crud-toolbar-right">
+          <div class="search-bar" style="width:220px">
+            <i class="fas fa-magnifying-glass"></i>
+            <input type="text" placeholder="Cari sumber daya..." oninput="resSearchChange(this.value)">
+          </div>
+          <span style="font-size:12px;color:var(--text-muted)"><span id="res-count">0</span> data</span>
+        </div>
+      </div>
+
+      <!-- Table -->
+      <div class="crud-table-wrap">
+        <table>
+          <thead><tr>
+            <th>Nama &amp; Catatan</th><th>Jenis</th><th style="text-align:center">Jumlah</th>
+            <th>Status</th><th class="hide-mobile">Lokasi</th><th class="hide-mobile">Ditugaskan ke</th><th>Aksi</th>
+          </tr></thead>
+          <tbody id="res-tbody"></tbody>
+        </table>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ADD / EDIT RESOURCE MODAL -->
+<div class="crud-modal-overlay hidden" id="res-modal" onclick="if(event.target===this)hideResModal()">
+  <div class="crud-modal-inner">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-boxes-stacking" style="color:var(--copper)"></i> <span id="res-modal-title">Tambah Sumber Daya</span></div>
+      <button class="modal-close" onclick="hideResModal()" type="button"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="res-form" onsubmit="event.preventDefault();submitResource()">
+        <div class="form-field"><label class="form-label">Nama Sumber Daya <span style="color:var(--danger)">*</span></label>
+          <input class="form-input" id="rf-name" type="text" placeholder="cth: Helikopter SAR-03" required></div>
+        <div class="form-grid-2">
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Jenis</label>
+            <select class="form-select" id="rf-type">
+              <option value="helikopter">Helikopter</option><option value="truk">Truk</option>
+              <option value="perahu">Perahu</option><option value="ambulans">Ambulans</option>
+              <option value="relawan">Relawan</option><option value="logistik">Logistik</option>
+            </select></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Jumlah / Unit</label>
+            <input class="form-input" id="rf-quantity" type="number" min="1" value="1" required></div>
+        </div>
+        <div class="form-grid-2" style="margin-top:12px">
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Status</label>
+            <select class="form-select" id="rf-status">
+              <option value="tersedia">Tersedia</option>
+              <option value="deployed">Deployed</option>
+              <option value="maintenance">Maintenance</option>
+            </select></div>
+          <div class="form-field" style="margin-bottom:0"><label class="form-label">Lokasi Saat Ini</label>
+            <input class="form-input" id="rf-location" type="text" placeholder="cth: Bandara Soekarno-Hatta"></div>
+        </div>
+        <div class="form-field" style="margin-top:12px;margin-bottom:0"><label class="form-label">Catatan</label>
+          <textarea class="form-textarea" id="rf-notes" rows="2" placeholder="Keterangan tambahan..."></textarea></div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideResModal()" type="button">Batal</button>
+      <button class="btn btn-primary" onclick="submitResource()" type="button"><i class="fas fa-save"></i> Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ASSIGN MODAL -->
+<div class="crud-modal-overlay hidden" id="assign-modal" onclick="if(event.target===this)hideAssignModal()">
+  <div class="crud-modal-inner small">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-link" style="color:var(--success)"></i> Tugaskan ke Insiden</div>
+      <button class="modal-close" onclick="hideAssignModal()" type="button"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="assign-res-id">
+      <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:10px" id="assign-res-name"></div>
+      <div id="assign-current" style="font-size:12px;color:var(--text-muted);padding:10px;background:var(--bg);border-radius:var(--radius);margin-bottom:14px"></div>
+      <div class="form-field" style="margin-bottom:0"><label class="form-label">Tugaskan ke Insiden</label>
+        <select class="form-select" id="assign-inc-select"></select></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="hideAssignModal()" type="button">Batal</button>
+      <button class="btn btn-success"   onclick="confirmAssign()" type="button"><i class="fas fa-link"></i> Tugaskan</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast-container"></div>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+<script src="../assets/js/config.js"></script>
+<script src="../assets/js/core/api-client.js"></script>
+<script src="../assets/js/core/socket-client.js"></script>
+<script src="../assets/js/core/app.js"></script>
+<script src="../assets/js/core/state.js"></script>
+
+<script src="../assets/js/pages/resources.js"></script>
+<script>document.addEventListener('DOMContentLoaded', initResources);</script>
+</body>
+</html>
