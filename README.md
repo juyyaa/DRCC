@@ -33,9 +33,6 @@ npm run dev                   # jalan di http://localhost:4000
 
 ⚠️ **Ganti semua password ini sebelum deploy production.**
 
-## Deploy ke VPS
-Lihat **DEPLOYMENT.md** untuk panduan lengkap step-by-step (Nginx, SSL, PM2, MariaDB).
-
 ## Struktur 5 Layer Architecture
 | Layer | Implementasi |
 |---|---|
@@ -49,4 +46,4 @@ Lihat **DEPLOYMENT.md** untuk panduan lengkap step-by-step (Nginx, SSL, PM2, Mar
 Lihat `backend/src/middleware/permissions.js` untuk matrix lengkap akses per role per halaman.
 
 ---
-*DRCC v2.0 — Mahasiswa Teknik Elektro · 3 Orang · Production-Ready Full-Stack*
+*DRCC v2.0 — Mahasiswa Teknik Elektro
